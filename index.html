@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRAIDOR: Último Sobrevivente — Arena 3-4 Players</title>
+<title>TRAIDOR: Último Sobrevivente 3D — Arena 3-4 Players</title>
 <link rel="stylesheet" href="style.css" />
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>🔪 TRAIDOR <span>Último Sobrevivente</span></h1>
-    <p class="tagline">Battle Royale de arena • 13-21 anos • violência cartoon • 3-4 jogadores • 1 Traidor 🗡️ • 1 Xerife ⭐ • 3 NPCs malucos</p>
+    <h1>🔪 TRAIDOR <span>Último Sobrevivente 3D</span></h1>
+    <p class="tagline">Battle Royale de arena 3D • 13-21 anos • violência cartoon • 3-4 jogadores • 1 Traidor 🗡️ • 1 Xerife ⭐ • 3 NPCs malucos</p>
   </header>
 
   <div id="menu" class="card">
@@ -39,7 +42,7 @@
       <hr/>
       <div><b>👵 Dona Cida (idosa):</b> quer ajudar, mas atrapalha! Dá <b>Sopa Confusa</b>: +35 HP mas inverte controles por 6s.</div>
       <div><b>⚽ Cauã (menino da bola):</b> dá sua <b>Super Bola</b> para um jogador. Arremesse com [ESPECIAL]: 15 dano + stun 2s, quica nas paredes!</div>
-      <div><b>🐱 Seu Miau (homem do gatinho):</b> carrega gatinho na bolsa surrada. Fique perto 3s = <b>Escudo Miau</b> (bloqueia 1 tiro + seta revela traidor 8s). Se atirar nele, o gato te DEDURA (todos veem você 5s)!</div>
+      <div><b>🐱 Jorge (homem do gatinho Mandu):</b> carrega o gatinho <b>Mandu</b> na bolsa surrada. Fique perto 3s = <b>Escudo Mandu</b> (bloqueia 1 tiro + seta revela traidor 8s). Se atirar nele, o Mandu te DEDURA (todos veem você 5s)!</div>
     </div>
     <div class="controls-info">
       <b>Controles:</b>
@@ -61,7 +64,8 @@
 
   <div id="rolePopup" class="hidden"></div>
 
-  <canvas id="game" width="960" height="600" class="hidden"></canvas>
+  <div id="game3d" class="hidden"></div>
+  <canvas id="game" width="960" height="600" class="hidden" style="display:none"></canvas>
 
   <div id="gameOver" class="card hidden">
     <h2 id="winnerText">🏆</h2>
@@ -71,6 +75,6 @@
 
   <footer>Feito para 13-21 anos • Sem sangue real, só neon e zoeira • Dica de fair-play: não conte seu papel em voz alta!</footer>
 </div>
-<script src="game.js"></script>
+<script type="module" src="game.js"></script>
 </body>
 </html>

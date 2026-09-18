@@ -12,6 +12,8 @@ select,input{background:#080b1e;color:#fff;border:1px solid #444;padding:6px 8px
 button{background:linear-gradient(90deg,#ff2e63,#ff9f1c);border:0;color:#fff;font-weight:800;font-size:18px;padding:12px 20px;border-radius:12px;cursor:pointer;margin-top:10px}
 button:hover{filter:brightness(1.15);transform:scale(1.02)}
 .hidden{display:none!important}
+#game3d{background:#05070f;border:2px solid #08d9d6;border-radius:14px;width:100%;max-width:960px;box-shadow:0 0 30px #08d9d655;display:block;margin:0 auto;overflow:hidden}
+#game3d canvas{width:100%!important;height:auto!important;display:block}
 #game{background:#05070f;border:2px solid #08d9d6;border-radius:14px;width:100%;box-shadow:0 0 30px #08d9d655;display:block;margin:0 auto}
 #hud{display:flex;gap:12px;margin:8px 0}
 #playersHud{display:flex;gap:8px;flex:1;flex-wrap:wrap}
