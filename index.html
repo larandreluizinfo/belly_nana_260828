@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRAIDOR: Último Sobrevivente — Arena 3-4 Players</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🔪 TRAIDOR <span>Último Sobrevivente</span></h1>
+    <p class="tagline">Battle Royale de arena • 13-21 anos • violência cartoon • 3-4 jogadores • 1 Traidor 🗡️ • 1 Xerife ⭐ • 3 NPCs malucos</p>
+  </header>
+
+  <div id="menu" class="card">
+    <h2>🎮 Configurar Partida</h2>
+    <div class="row">
+      <label>Total de combatentes:
+        <select id="totalPlayers">
+          <option value="3">3 jogadores</option>
+          <option value="4" selected>4 jogadores</option>
+        </select>
+      </label>
+      <label>Humanos no teclado:
+        <select id="humanPlayers">
+          <option value="1" selected>1 humano + bots</option>
+          <option value="2">2 humanos</option>
+          <option value="3">3 humanos</option>
+          <option value="4">4 humanos</option>
+        </select>
+      </label>
+    </div>
+    <div id="names" class="row"></div>
+    <div class="roles-info">
+      <div><b>🗡️ TRAIDOR / Assassino:</b> dano furtivo x1.6 por trás. Faca silenciosa. Vence matando todos sem ser caçado.</div>
+      <div><b>⭐ XERIFE / Polícia:</b> 120 HP, pistola potente, <b>Prisão (stun 2s)</b>. Tente descobrir e eliminar o traidor.</div>
+      <div><b>🎯 Sobreviventes:</b> equilibrados. Objetivo: seja o ÚNICO vivo.</div>
+      <hr/>
+      <div><b>👵 Dona Cida (idosa):</b> quer ajudar, mas atrapalha! Dá <b>Sopa Confusa</b>: +35 HP mas inverte controles por 6s.</div>
+      <div><b>⚽ Cauã (menino da bola):</b> dá sua <b>Super Bola</b> para um jogador. Arremesse com [ESPECIAL]: 15 dano + stun 2s, quica nas paredes!</div>
+      <div><b>🐱 Seu Miau (homem do gatinho):</b> carrega gatinho na bolsa surrada. Fique perto 3s = <b>Escudo Miau</b> (bloqueia 1 tiro + seta revela traidor 8s). Se atirar nele, o gato te DEDURA (todos veem você 5s)!</div>
+    </div>
+    <div class="controls-info">
+      <b>Controles:</b>
+      <ul>
+        <li><b>P1 (ciano):</b> WASD mover • E atirar • Q especial (bola/prisão) • Shift dash</li>
+        <li><b>P2 (laranja):</b> Setas mover • Enter atirar • / (barra) especial • Shift-Dir dash</li>
+        <li><b>P3 (verde):</b> T F G H mover • R atirar • Y especial</li>
+        <li><b>P4 (rosa):</b> I J K L mover • U atirar • O especial</li>
+      </ul>
+    </div>
+    <button id="startBtn">▶ COMEÇAR BATALHA</button>
+    <p class="hint">Dica: papéis são SECRETOS. Decore o seu nos 6 segundos iniciais e depois esconda! Bots completam quem faltar.</p>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div id="playersHud"></div>
+    <div id="killfeed"></div>
+  </div>
+
+  <div id="rolePopup" class="hidden"></div>
+
+  <canvas id="game" width="960" height="600" class="hidden"></canvas>
+
+  <div id="gameOver" class="card hidden">
+    <h2 id="winnerText">🏆</h2>
+    <div id="revealRoles"></div>
+    <button id="restartBtn">🔄 Jogar de novo</button>
+  </div>
+
+  <footer>Feito para 13-21 anos • Sem sangue real, só neon e zoeira • Dica de fair-play: não conte seu papel em voz alta!</footer>
+</div>
+<script src="game.js"></script>
+</body>
+</html>

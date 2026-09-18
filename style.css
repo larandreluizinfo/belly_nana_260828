@@ -1,0 +1,24 @@
+*{box-sizing:border-box}body{margin:0;background:#0b0e1a;color:#eef;font-family:'Segoe UI',system-ui,Arial,sans-serif;display:flex;justify-content:center;min-height:100vh}
+#app{width:1020px;max-width:96vw;padding:12px}
+header h1{margin:6px 0;font-size:32px;letter-spacing:1px;color:#ff2e63;text-shadow:0 0 12px #ff2e63}
+header h1 span{color:#08d9d6;font-size:20px}
+.tagline{opacity:.85;margin:0 0 12px}
+.card{background:#151a30;border:1px solid #2a335e;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 0 24px #0008}
+.row{display:flex;gap:16px;margin:8px 0;flex-wrap:wrap}
+label{background:#0f1430;padding:8px 12px;border-radius:10px}
+select,input{background:#080b1e;color:#fff;border:1px solid #444;padding:6px 8px;border-radius:8px}
+.roles-info div{margin:4px 0;font-size:14px}
+.controls-info{font-size:13px;background:#0f1430;padding:10px;border-radius:10px;margin-top:10px}
+button{background:linear-gradient(90deg,#ff2e63,#ff9f1c);border:0;color:#fff;font-weight:800;font-size:18px;padding:12px 20px;border-radius:12px;cursor:pointer;margin-top:10px}
+button:hover{filter:brightness(1.15);transform:scale(1.02)}
+.hidden{display:none!important}
+#game{background:#05070f;border:2px solid #08d9d6;border-radius:14px;width:100%;box-shadow:0 0 30px #08d9d655;display:block;margin:0 auto}
+#hud{display:flex;gap:12px;margin:8px 0}
+#playersHud{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+.pcard{background:#151a30;border-radius:10px;padding:8px 10px;min-width:210px;border-left:6px solid #fff;font-size:13px}
+.pcard.dead{opacity:.4;filter:grayscale(1)}
+#killfeed{background:#000a;width:280px;min-height:60px;border-radius:10px;padding:8px;font-size:12px}
+#rolePopup{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000c;z-index:10}
+#rolePopup .inner{background:#151a30;border:2px solid #ff2e63;padding:24px;border-radius:16px;max-width:520px;text-align:center}
+.hint{opacity:.7;font-size:13px}
+footer{opacity:.6;font-size:12px;text-align:center;margin:10px}
