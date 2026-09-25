@@ -36,10 +36,10 @@ const sfx = {
   win: ()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.2,'square',0.12),i*150));}
 };
 
-// ---------- THREE SETUP ----------
+// ---------- THREE SETUP - CENÁRIO FLORESTA 🌲 ----------
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05070f);
-scene.fog = new THREE.Fog(0x05070f, 60, 120);
+scene.background = new THREE.Color(0x0a1f14);
+scene.fog = new THREE.Fog(0x0a1f14, 55, 115);
 const camera = new THREE.PerspectiveCamera(50, 960/600, 0.1, 300);
 camera.position.set(0, 38, 27);
 camera.lookAt(0, 0, -2);
@@ -48,28 +48,87 @@ renderer.setSize(960, 600);
 renderer.shadowMap.enabled = true;
 container3d.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0x8899ff, 0x080810, 0.9));
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+scene.add(new THREE.HemisphereLight(0xcfffd0, 0x1a2f1a, 0.85));
+const dirLight = new THREE.DirectionalLight(0xfff2cc, 1.0);
 dirLight.position.set(12, 30, 10);
 dirLight.castShadow = true;
 scene.add(dirLight);
-const neonPink = new THREE.PointLight(0xff2e63, 60, 80); neonPink.position.set(-20, 8, -10); scene.add(neonPink);
-const neonCyan = new THREE.PointLight(0x08d9d6, 60, 80); neonCyan.position.set(20, 8, 10); scene.add(neonCyan);
+// luz do sol coando nas árvores + brilho verde da mata (mantém nomes p/ animação)
+const neonPink = new THREE.PointLight(0xffd166, 50, 80); neonPink.position.set(-20, 8, -10); scene.add(neonPink);
+const neonCyan = new THREE.PointLight(0x52ff8a, 50, 80); neonCyan.position.set(20, 8, 10); scene.add(neonCyan);
 
-// chão + grade
+// chão de grama + grade sutil
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(52, 34),
-  new THREE.MeshStandardMaterial({ color: 0x0a0f22, roughness: 0.9 })
+  new THREE.MeshStandardMaterial({ color: 0x1e4d2b, roughness: 1 })
 );
 ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-const grid = new THREE.GridHelper(52, 26, 0x08d9d6, 0x1c2450);
-grid.position.y = 0.02; scene.add(grid);
-// muros da arena
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x232c5e, emissive: 0x08d9d6, emissiveIntensity: 0.15 });
+const grid = new THREE.GridHelper(52, 26, 0x2d6a4f, 0x1b4332);
+grid.position.y = 0.02; grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
+// cerca de madeira da clareira
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x5a3b1e, emissive: 0x2d6a4f, emissiveIntensity: 0.15, roughness: 1 });
 [[0,-17,52,1],[0,17,52,1],[-26,0,1,34],[26,0,1,34]].forEach(([x,z,w,d])=>{
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2, d), wallMat);
-  m.position.set(x, 1, z); m.castShadow = true; scene.add(m);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.4, d), wallMat);
+  m.position.set(x, 0.7, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
 });
+
+// 🌲 floresta ao redor da clareira (estático, não limpa no restart)
+function makeTree(x, z, s=1){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35*s, 0.5*s, 2.2*s, 8),
+    new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 1 })
+  );
+  trunk.position.y = 1.1*s; trunk.castShadow = true; g.add(trunk);
+  const greens = [0x1b7837, 0x239b47, 0x14532d];
+  for(let i=0;i<3;i++){
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry((2.0-i*0.45)*s, 1.8*s, 9),
+      new THREE.MeshStandardMaterial({ color: greens[i%3], roughness: 0.9 })
+    );
+    cone.position.y = (2.4+i*1.1)*s; cone.castShadow = true; g.add(cone);
+  }
+  g.position.set(x, 0, z);
+  g.rotation.y = Math.random()*Math.PI*2;
+  scene.add(g);
+  return g;
+}
+function makeBush(x, z, s=1){
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.7*s, 10, 10),
+    new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 1 })
+  );
+  m.position.set(x, 0.5*s, z); m.castShadow = true; scene.add(m);
+}
+function makeRock(x, z, s=1){
+  const m = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.6*s),
+    new THREE.MeshStandardMaterial({ color: 0x6c757d, roughness: 1 })
+  );
+  m.position.set(x, 0.4*s, z); m.castShadow = true; scene.add(m);
+}
+// anel de árvores fora da arena
+for(let i=0;i<26;i++){
+  const a = (i/26)*Math.PI*2;
+  const rx = Math.cos(a)*(30+Math.random()*8), rz = Math.sin(a)*(21+Math.random()*6);
+  makeTree(rx, rz, 0.9+Math.random()*0.9);
+}
+// arbustos e pedras espalhados na borda da clareira
+for(let i=0;i<12;i++){
+  makeBush(-24+Math.random()*48, (Math.random()<0.5?-1:1)*(14+Math.random()*2.5), 0.7+Math.random()*0.8);
+}
+for(let i=0;i<6;i++){
+  makeRock(-22+Math.random()*44, (Math.random()<0.5?-1:1)*(12+Math.random()*3), 0.6+Math.random()*0.7);
+}
+// vagalumes 🟡
+{
+  const fireGeo = new THREE.BufferGeometry();
+  const N = 60, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){ pos[i*3]=-25+Math.random()*50; pos[i*3+1]=1+Math.random()*5; pos[i*3+2]=-16+Math.random()*32; }
+  fireGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var fireflies = new THREE.Points(fireGeo, new THREE.PointsMaterial({ color: 0xfff9a3, size: 0.25, transparent: true, opacity: 0.9 }));
+  scene.add(fireflies);
+}
 
 let obstacleMeshes = [], playerMeshes = {}, npcMeshes = {}, bulletMeshes = [], ballMeshes = [], pickupMeshes = [], particleMeshes = [], revealLine = null;
 
@@ -225,12 +284,16 @@ function startGame(){
     {x:180,y:430,w:120,h:20},{x:660,y:430,w:120,h:20},
     {x:440,y:240,w:80,h:120},{x:80,y:270,w:30,h:60},{x:850,y:270,w:30,h:60},
   ];
-  // obstáculos 3D
-  obstacles.forEach(o=>{
+  // obstáculos 3D — troncos caídos / rochas com musgo
+  obstacles.forEach((o, idx)=>{
     const w = o.w/20, d = o.h/20;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.2, d),
-      new THREE.MeshStandardMaterial({ color: 0x232c5e, emissive: 0x08d9d6, emissiveIntensity: 0.25 }));
-    m.position.set(toWX(o.x+o.w/2), 1.1, toWZ(o.y+o.h/2));
+    const isLog = idx % 2 === 0;
+    const m = new THREE.Mesh(
+      isLog ? new THREE.CylinderGeometry(d/2, d/2, w, 10) : new THREE.BoxGeometry(w, 2.2, d),
+      new THREE.MeshStandardMaterial({ color: isLog ? 0x6b4a2b : 0x3a5a3a, emissive: 0x1b4332, emissiveIntensity: 0.25, roughness: 1 })
+    );
+    if(isLog){ m.rotation.z = Math.PI/2; m.position.set(toWX(o.x+o.w/2), d/2, toWZ(o.y+o.h/2)); }
+    else m.position.set(toWX(o.x+o.w/2), 1.1, toWZ(o.y+o.h/2));
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m); obstacleMeshes.push(m);
   });
@@ -269,7 +332,7 @@ function startGame(){
   hudEl.classList.remove('hidden');
   running = true;
   killfeedEl.innerHTML = '';
-  feed('⚔️ Batalha 3D começou! Seja o ÚNICO sobrevivente!');
+  feed('🌲 Batalha na FLORESTA começou! Seja o ÚNICO sobrevivente da clareira!');
   feed('🐱 Jorge carrega o Mandu na bolsa surrada. Proteja-os!');
   showRolesPopup();
   requestAnimationFrame(loop);
@@ -576,7 +639,12 @@ function render3d(){
     revealLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffff00 }));
     scene.add(revealLine);
   }
-  neonPink.intensity = 50 + Math.sin(t*3)*15;
+  neonPink.intensity = 42 + Math.sin(t*2)*10;
+  neonCyan.intensity = 42 + Math.cos(t*1.7)*10;
+  if(typeof fireflies !== 'undefined' && fireflies){
+    fireflies.position.y = Math.sin(t*0.8)*0.4;
+    fireflies.rotation.y = t*0.02;
+  }
   renderer.render(scene, camera);
 }
 
