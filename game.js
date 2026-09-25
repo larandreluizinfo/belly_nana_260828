@@ -36,7 +36,8 @@ const sfx = {
   win: ()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.2,'square',0.12),i*150));}
 };
 
-// ---------- THREE SETUP - CENÁRIO FLORESTA 🌲 ----------
+// ---------- THREE SETUP - CENÁRIOS 🌲👵🐱 ----------
+let currentScenario = 'floresta';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a1f14);
 scene.fog = new THREE.Fog(0x0a1f14, 55, 115);
@@ -57,7 +58,7 @@ scene.add(dirLight);
 const neonPink = new THREE.PointLight(0xffd166, 50, 80); neonPink.position.set(-20, 8, -10); scene.add(neonPink);
 const neonCyan = new THREE.PointLight(0x52ff8a, 50, 80); neonCyan.position.set(20, 8, 10); scene.add(neonCyan);
 
-// chão de grama + grade sutil
+// chão base + grade (cores trocadas por cenário)
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(52, 34),
   new THREE.MeshStandardMaterial({ color: 0x1e4d2b, roughness: 1 })
@@ -65,69 +66,136 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 const grid = new THREE.GridHelper(52, 26, 0x2d6a4f, 0x1b4332);
 grid.position.y = 0.02; grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
-// cerca de madeira da clareira
+// paredes da arena (cores trocadas por cenário)
 const wallMat = new THREE.MeshStandardMaterial({ color: 0x5a3b1e, emissive: 0x2d6a4f, emissiveIntensity: 0.15, roughness: 1 });
+const wallMeshes = [];
 [[0,-17,52,1],[0,17,52,1],[-26,0,1,34],[26,0,1,34]].forEach(([x,z,w,d])=>{
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.4, d), wallMat);
   m.position.set(x, 0.7, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+  wallMeshes.push(m);
 });
 
-// 🌲 floresta ao redor da clareira (estático, não limpa no restart)
+// grupo do cenário (limpa e reconstrói a cada partida)
+const scenarioGroup = new THREE.Group();
+scene.add(scenarioGroup);
+let fireflies = null;
+function clearScenario(){
+  while(scenarioGroup.children.length){
+    const c = scenarioGroup.children.pop();
+    scenarioGroup.remove(c);
+  }
+  fireflies = null;
+}
+function mat(color, opts={}){ return new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...opts }); }
+function box(w,h,d,color,x,y,z,emissive=0x000000){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat(color, { emissive, emissiveIntensity: emissive?0.2:0 }));
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; scenarioGroup.add(m); return m;
+}
 function makeTree(x, z, s=1){
   const g = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.35*s, 0.5*s, 2.2*s, 8),
-    new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 1 })
-  );
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35*s, 0.5*s, 2.2*s, 8), mat(0x6b4a2b, { roughness: 1 }));
   trunk.position.y = 1.1*s; trunk.castShadow = true; g.add(trunk);
   const greens = [0x1b7837, 0x239b47, 0x14532d];
   for(let i=0;i<3;i++){
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry((2.0-i*0.45)*s, 1.8*s, 9),
-      new THREE.MeshStandardMaterial({ color: greens[i%3], roughness: 0.9 })
-    );
+    const cone = new THREE.Mesh(new THREE.ConeGeometry((2.0-i*0.45)*s, 1.8*s, 9), mat(greens[i%3]));
     cone.position.y = (2.4+i*1.1)*s; cone.castShadow = true; g.add(cone);
   }
-  g.position.set(x, 0, z);
-  g.rotation.y = Math.random()*Math.PI*2;
-  scene.add(g);
-  return g;
+  g.position.set(x, 0, z); g.rotation.y = Math.random()*Math.PI*2;
+  scenarioGroup.add(g); return g;
 }
-function makeBush(x, z, s=1){
-  const m = new THREE.Mesh(
-    new THREE.SphereGeometry(0.7*s, 10, 10),
-    new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 1 })
-  );
-  m.position.set(x, 0.5*s, z); m.castShadow = true; scene.add(m);
+function makeBush(x, z, s=1, color=0x2d6a4f){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.7*s, 10, 10), mat(color, { roughness: 1 }));
+  m.position.set(x, 0.5*s, z); m.castShadow = true; scenarioGroup.add(m);
 }
 function makeRock(x, z, s=1){
-  const m = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(0.6*s),
-    new THREE.MeshStandardMaterial({ color: 0x6c757d, roughness: 1 })
-  );
-  m.position.set(x, 0.4*s, z); m.castShadow = true; scene.add(m);
+  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6*s), mat(0x6c757d, { roughness: 1 }));
+  m.position.set(x, 0.4*s, z); m.castShadow = true; scenarioGroup.add(m);
 }
-// anel de árvores fora da arena
-for(let i=0;i<26;i++){
-  const a = (i/26)*Math.PI*2;
-  const rx = Math.cos(a)*(30+Math.random()*8), rz = Math.sin(a)*(21+Math.random()*6);
-  makeTree(rx, rz, 0.9+Math.random()*0.9);
-}
-// arbustos e pedras espalhados na borda da clareira
-for(let i=0;i<12;i++){
-  makeBush(-24+Math.random()*48, (Math.random()<0.5?-1:1)*(14+Math.random()*2.5), 0.7+Math.random()*0.8);
-}
-for(let i=0;i<6;i++){
-  makeRock(-22+Math.random()*44, (Math.random()<0.5?-1:1)*(12+Math.random()*3), 0.6+Math.random()*0.7);
-}
-// vagalumes 🟡
-{
-  const fireGeo = new THREE.BufferGeometry();
+function makeFireflies(){
+  const geo = new THREE.BufferGeometry();
   const N = 60, pos = new Float32Array(N*3);
   for(let i=0;i<N;i++){ pos[i*3]=-25+Math.random()*50; pos[i*3+1]=1+Math.random()*5; pos[i*3+2]=-16+Math.random()*32; }
-  fireGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  var fireflies = new THREE.Points(fireGeo, new THREE.PointsMaterial({ color: 0xfff9a3, size: 0.25, transparent: true, opacity: 0.9 }));
-  scene.add(fireflies);
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  fireflies = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xfff9a3, size: 0.25, transparent: true, opacity: 0.9 }));
+  scenarioGroup.add(fireflies);
+}
+
+function buildScenario(type){
+  clearScenario();
+  currentScenario = type;
+  if(type === 'casa_cida'){
+    // 👵 Casa da Dona Cida — sala/cozinha aconchegante
+    scene.background.set(0x1a1210); scene.fog.color.set(0x1a1210);
+    ground.material.color.set(0x8b5a2b);
+    wallMat.color.set(0xd9a066); wallMat.emissive.set(0xff9f1c);
+    grid.material.color.set(0x5a3b1e);
+    // tapete central
+    box(14, 0.1, 9, 0xa4133c, 0, 0.05, 0);
+    box(10, 0.12, 6, 0xffca3a, 0, 0.06, 0);
+    // fogão + panela de sopa 🥣
+    box(3, 2, 2, 0x3a3a3a, -20, 1, -10);
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.7, 0.8, 14), mat(0x222222));
+    pot.position.set(-20, 2.4, -10); pot.castShadow = true; scenarioGroup.add(pot);
+    const soup = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.2, 14), mat(0xff9f1c, { emissive: 0xff6b00, emissiveIntensity: 0.5 }));
+    soup.position.set(-20, 2.8, -10); scenarioGroup.add(soup);
+    // mesa + cadeiras
+    box(6, 0.3, 3.5, 0x6b4a2b, 5, 1.2, -8);
+    [[3,-8],[7,-8]].forEach(([lx,lz])=>{ box(0.3,1.2,0.3,0x4a3520,lx-1,0.6,lz); box(0.3,1.2,0.3,0x4a3520,lx+1,0.6,lz); });
+    box(1.2, 1.8, 1.2, 0x7f4f24, 2, 0.9, -5); box(1.2, 1.8, 1.2, 0x7f4f24, 8, 0.9, -5);
+    // sofá + estante + quadro
+    box(6, 1.2, 2, 0xb388ff, -8, 0.6, 12);
+    box(6, 1.5, 0.6, 0x8e6cc9, -8, 1.5, 13);
+    box(4, 3, 0.8, 0x4a3520, 18, 1.5, 13);
+    box(2, 0.25, 0.7, 0xffd166, 18, 1.2, 13); box(2, 0.25, 0.7, 0x06d6a0, 18, 2.0, 13);
+    const label = makeLabel('Casa da Dona Cida 👵🏠'); label.position.set(0, 7, -14); scenarioGroup.add(label);
+    feed('👵 Dona Cida: “Entrem, meus filhos! Não reparem a bagunça... e cuidado com a sopa quente!”');
+  } else if(type === 'barraco_jorge'){
+    // 🐱 Barraquinho do Jorge — madeira + zinco, cantinho do Mandu
+    scene.background.set(0x0d1420); scene.fog.color.set(0x0d1420);
+    ground.material.color.set(0x4a4a4a);
+    wallMat.color.set(0x6b4f2a); wallMat.emissive.set(0x8b5a2b);
+    grid.material.color.set(0x333333);
+    // barraco central: 4 paredes de tábua + telha zinco
+    const wx = 8, wz = 5;
+    box(10, 3, 0.4, 0x8b5a2b, wx, 1.5, wz-4);
+    box(10, 3, 0.4, 0x7a4e25, wx, 1.5, wz+4);
+    box(0.4, 3, 8, 0x8b5a2b, wx-5, 1.5, wz);
+    box(0.4, 3, 8, 0x7a4e25, wx+5, 1.5, wz);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.25, 9.5), mat(0x9aa0a6, { roughness: 0.4, metalness: 0.5 }));
+    roof.position.set(wx, 3.4, wz); roof.rotation.z = 0.08; roof.castShadow = true; scenarioGroup.add(roof);
+    // varal + caixas + pneu
+    box(0.2, 3, 0.2, 0x4a3520, -12, 1.5, 8); box(0.2, 3, 0.2, 0x4a3520, -6, 1.5, 8);
+    const line = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 6, 6), mat(0xdddddd));
+    line.rotation.z = Math.PI/2; line.position.set(-9, 2.8, 8); scenarioGroup.add(line);
+    box(1.2, 1.2, 1.2, 0xfff3b0, -9.5, 2.1, 8); box(1.0, 1.0, 1.0, 0x06d6a0, -8, 2.1, 8);
+    box(2, 1, 1.4, 0x5a3b1e, -16, 0.5, -6); box(1.6, 0.9, 1.2, 0x6b4f2a, -14, 0.45, -5);
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.35, 10, 20), mat(0x222222));
+    tire.position.set(16, 0.5, 9); tire.rotation.x = Math.PI/2; tire.castShadow = true; scenarioGroup.add(tire);
+    // cantinho do Mandu 🐱: caminha + potes
+    const bed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.35, 16), mat(0xfbc4ff));
+    bed.position.set(wx-2.5, 0.18, wz+1.5); bed.receiveShadow = true; scenarioGroup.add(bed);
+    const bowlM = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.3, 0.3, 12), mat(0xff595e));
+    bowlM.position.set(wx+2, 0.15, wz+2); scenarioGroup.add(bowlM);
+    const bowlW = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.3, 0.3, 12), mat(0x06d6a0));
+    bowlW.position.set(wx+3, 0.15, wz+2); scenarioGroup.add(bowlW);
+    // bolsa surrada reserva do Jorge
+    box(1.4, 1, 0.8, 0x4a3520, wx, 0.5, wz-2);
+    const label = makeLabel('Barraco do Jorge + Mandu 🐱'); label.position.set(wx, 6, wz); scenarioGroup.add(label);
+    feed('🧔 Jorge: “Bem-vindo ao meu barraco! Não assusta o Mandu, hein!” 🐱');
+  } else {
+    // 🌲 Floresta (padrão)
+    scene.background.set(0x0a1f14); scene.fog.color.set(0x0a1f14);
+    ground.material.color.set(0x1e4d2b);
+    wallMat.color.set(0x5a3b1e); wallMat.emissive.set(0x2d6a4f);
+    grid.material.color.set(0x2d6a4f);
+    for(let i=0;i<26;i++){
+      const a = (i/26)*Math.PI*2;
+      makeTree(Math.cos(a)*(30+Math.random()*8), Math.sin(a)*(21+Math.random()*6), 0.9+Math.random()*0.9);
+    }
+    for(let i=0;i<12;i++) makeBush(-24+Math.random()*48, (Math.random()<0.5?-1:1)*(14+Math.random()*2.5), 0.7+Math.random()*0.8);
+    for(let i=0;i<6;i++) makeRock(-22+Math.random()*44, (Math.random()<0.5?-1:1)*(12+Math.random()*3), 0.6+Math.random()*0.7);
+    makeFireflies();
+  }
 }
 
 let obstacleMeshes = [], playerMeshes = {}, npcMeshes = {}, bulletMeshes = [], ballMeshes = [], pickupMeshes = [], particleMeshes = [], revealLine = null;
@@ -279,18 +347,26 @@ function startGame(){
   let humans = Math.min(parseInt($('humanPlayers').value), total);
   clearDynamic();
   players=[]; bullets=[]; thrownBalls=[]; pickups=[]; particles=[];
+  const scenario = document.getElementById('scenario')?.value || 'floresta';
+  killfeedEl.innerHTML = '';
+  buildScenario(scenario);
   obstacles = [
     {x:180,y:150,w:120,h:20},{x:660,y:150,w:120,h:20},
     {x:180,y:430,w:120,h:20},{x:660,y:430,w:120,h:20},
     {x:440,y:240,w:80,h:120},{x:80,y:270,w:30,h:60},{x:850,y:270,w:30,h:60},
   ];
-  // obstáculos 3D — troncos caídos / rochas com musgo
+  // obstáculos 3D — visual muda por cenário
+  const obsStyle = scenario === 'casa_cida'
+    ? { a: 0x7f4f24, b: 0xb388ff, e: 0x5a3b1e }
+    : scenario === 'barraco_jorge'
+    ? { a: 0x8b5a2b, b: 0x6c757d, e: 0x333333 }
+    : { a: 0x6b4a2b, b: 0x3a5a3a, e: 0x1b4332 };
   obstacles.forEach((o, idx)=>{
     const w = o.w/20, d = o.h/20;
     const isLog = idx % 2 === 0;
     const m = new THREE.Mesh(
       isLog ? new THREE.CylinderGeometry(d/2, d/2, w, 10) : new THREE.BoxGeometry(w, 2.2, d),
-      new THREE.MeshStandardMaterial({ color: isLog ? 0x6b4a2b : 0x3a5a3a, emissive: 0x1b4332, emissiveIntensity: 0.25, roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: isLog ? obsStyle.a : obsStyle.b, emissive: obsStyle.e, emissiveIntensity: 0.25, roughness: 1 })
     );
     if(isLog){ m.rotation.z = Math.PI/2; m.position.set(toWX(o.x+o.w/2), d/2, toWZ(o.y+o.h/2)); }
     else m.position.set(toWX(o.x+o.w/2), 1.1, toWZ(o.y+o.h/2));
@@ -331,8 +407,9 @@ function startGame(){
   $('game').classList.add('hidden');
   hudEl.classList.remove('hidden');
   running = true;
-  killfeedEl.innerHTML = '';
-  feed('🌲 Batalha na FLORESTA começou! Seja o ÚNICO sobrevivente da clareira!');
+  if(scenario === 'casa_cida') feed('🏠 Batalha na CASA DA DONA CIDA começou! Seja o ÚNICO sobrevivente da sala!');
+  else if(scenario === 'barraco_jorge') feed('🏚️ Batalha no BARRACO DO JORGE começou! Seja o ÚNICO sobrevivente do quintal!');
+  else feed('🌲 Batalha na FLORESTA começou! Seja o ÚNICO sobrevivente da clareira!');
   feed('🐱 Jorge carrega o Mandu na bolsa surrada. Proteja-os!');
   showRolesPopup();
   requestAnimationFrame(loop);
